@@ -1,3 +1,4 @@
+<!-- Updated version with two fingerprint icons (right and left finger) and labels -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -9,7 +10,6 @@
       box-sizing: border-box;
       font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
     }
-
     body {
       margin: 0;
       background-image: url('login_background.png');
@@ -20,7 +20,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .main-card {
       background: rgba(255, 255, 255, 0.96);
       padding: 30px;
@@ -30,25 +29,21 @@
       max-width: 600px;
       animation: fadeIn 0.6s ease-in-out both;
     }
-
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
     .logo {
       width: 120px;
       display: block;
       margin: 0 auto 10px;
     }
-
     h2 {
       text-align: center;
       margin-bottom: 24px;
       font-size: 22px;
       color: #1a1a1a;
     }
-
     .status-box {
       background-color: #e3f2fd;
       color: #0d47a1;
@@ -60,7 +55,6 @@
       align-items: center;
       margin-bottom: 20px;
     }
-
     .status-box button {
       background: #90caf9;
       border: none;
@@ -69,17 +63,8 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
-    .log-section {
-      margin-bottom: 24px;
-    }
-
-    .log-section h4 {
-      margin-bottom: 10px;
-      font-size: 16px;
-      color: #333;
-    }
-
+    .log-section { margin-bottom: 24px; }
+    .log-section h4 { margin-bottom: 10px; font-size: 16px; color: #333; }
     .log-list {
       list-style: none;
       padding: 0;
@@ -90,14 +75,12 @@
       padding: 10px;
       background: #fafafa;
     }
-
     .log-list li {
       font-size: 14px;
       margin-bottom: 8px;
       position: relative;
       padding-left: 20px;
     }
-
     .log-list li::before {
       content: '\2022';
       color: #0d6efd;
@@ -105,7 +88,6 @@
       position: absolute;
       left: 0;
     }
-
     .clear-log-btn {
       background: #ef5350;
       color: white;
@@ -115,41 +97,45 @@
       cursor: pointer;
       float: right;
     }
-
     .scan-area {
       display: flex;
-      justify-content: center;
-      margin: 30px 0 20px;
+      justify-content: space-evenly;
+      gap: 30px;
+      margin: 30px 0 10px;
     }
-
+    .scan-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
     .fingerprint-icon {
       width: 80px;
       height: 80px;
-      cursor: pointer;
       transition: transform 0.3s ease;
     }
-
-    .fingerprint-icon:hover {
+    .scan-item:hover .fingerprint-icon {
       transform: scale(1.1);
     }
-
+    .scan-label {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #333;
+    }
     .user-info {
       margin-top: 20px;
       display: none;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
     }
-
     td {
       padding: 8px 10px;
       border-bottom: 1px solid #ddd;
       font-size: 15px;
     }
-
     td:first-child {
       font-weight: bold;
       width: 35%;
@@ -171,8 +157,15 @@
       <ul class="log-list" id="logBox"></ul>
     </div>
 
-    <div class="scan-area" onclick="simulateScan()">
-      <img src="fingerprint-icon.png" alt="Fingerprint" class="fingerprint-icon" />
+    <div class="scan-area">
+      <div class="scan-item" onclick="simulateScan()">
+        <img src="fingerprint-icon.png" alt="Fingerprint" class="fingerprint-icon" />
+        <div class="scan-label">Scan Jari Kanan</div>
+      </div>
+      <div class="scan-item" onclick="simulateScan()">
+        <img src="fingerprint-icon.png" alt="Fingerprint" class="fingerprint-icon" />
+        <div class="scan-label">Scan Jari Kiri</div>
+      </div>
     </div>
 
     <div class="user-info" id="userInfo">
@@ -191,7 +184,7 @@
   <script>
     const logBox = document.getElementById("logBox");
     const userInfo = document.getElementById("userInfo");
-
+    const checkInMap = new Map();
     const dummyUsers = [
       { nik: "001", nama: "Fakhri Dhiya", company: "Farm Kemitraan", department: "Produksi", job: "Supervisor" },
       { nik: "002", nama: "Rina Ayu", company: "Feedmill", department: "QA", job: "Staff QA" },
@@ -224,18 +217,27 @@
     function simulateScan() {
       const user = dummyUsers[Math.floor(Math.random() * dummyUsers.length)];
       const now = new Date();
+      const timeStr = now.toLocaleTimeString();
 
       document.getElementById("nik").textContent = user.nik;
       document.getElementById("nama").textContent = user.nama;
       document.getElementById("company").textContent = user.company;
       document.getElementById("dept").textContent = user.department;
       document.getElementById("job").textContent = user.job;
-      document.getElementById("checkin").textContent = now.toLocaleTimeString();
-      document.getElementById("checkout").textContent = now.toLocaleTimeString();
+
+      if (!checkInMap.has(user.nik)) {
+        document.getElementById("checkin").textContent = timeStr;
+        document.getElementById("checkout").textContent = "";
+        checkInMap.set(user.nik, timeStr);
+        addLog(`Check-In oleh ${user.nama}`);
+      } else {
+        document.getElementById("checkin").textContent = checkInMap.get(user.nik);
+        document.getElementById("checkout").textContent = timeStr;
+        checkInMap.delete(user.nik);
+        addLog(`Check-Out oleh ${user.nama}`);
+      }
 
       userInfo.style.display = "block";
-      addLog(`Fingerprint terdeteksi. Absensi oleh ${user.nama}`);
-
       setTimeout(() => {
         userInfo.style.display = "none";
       }, 10000);
