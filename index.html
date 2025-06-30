@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Absensi Sidik Jari</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background-image: url('login_background.png');
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .main-card {
+      background: rgba(255, 255, 255, 0.96);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+      width: 95%;
+      max-width: 600px;
+      animation: fadeIn 0.6s ease-in-out both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      width: 120px;
+      display: block;
+      margin: 0 auto 10px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 22px;
+      color: #1a1a1a;
+    }
+
+    .status-box {
+      background-color: #e3f2fd;
+      color: #0d47a1;
+      padding: 12px 16px;
+      border-left: 5px solid #0d47a1;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .status-box button {
+      background: #90caf9;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .log-section {
+      margin-bottom: 24px;
+    }
+
+    .log-section h4 {
+      margin-bottom: 10px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .log-list {
+      list-style: none;
+      padding: 0;
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      background: #fafafa;
+    }
+
+    .log-list li {
+      font-size: 14px;
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .log-list li::before {
+      content: '\2022';
+      color: #0d6efd;
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+    }
+
+    .clear-log-btn {
+      background: #ef5350;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    }
+
+    .scan-area {
+      display: flex;
+      justify-content: center;
+      margin: 30px 0 20px;
+    }
+
+    .fingerprint-icon {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .fingerprint-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .user-info {
+      margin-top: 20px;
+      display: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #ddd;
+      font-size: 15px;
+    }
+
+    td:first-child {
+      font-weight: bold;
+      width: 35%;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-card">
+    <img src="ireapnet_logo.jpg" alt="Logo" class="logo" />
+    <h2>Absensi Karyawan - Metode Sidik Jari</h2>
+
+    <div class="status-box">
+      🔑 Fingerprint Device: <span id="device-status">Disconnected</span>
+      <button onclick="refreshDevice()">↻</button>
+    </div>
+
+    <div class="log-section">
+      <h4>Device Activity Log <button class="clear-log-btn" onclick="clearLog()">Clear Log</button></h4>
+      <ul class="log-list" id="logBox"></ul>
+    </div>
+
+    <div class="scan-area" onclick="simulateScan()">
+      <img src="fingerprint-icon.png" alt="Fingerprint" class="fingerprint-icon" />
+    </div>
+
+    <div class="user-info" id="userInfo">
+      <table>
+        <tr><td>NIK</td><td id="nik"></td></tr>
+        <tr><td>Nama</td><td id="nama"></td></tr>
+        <tr><td>Company</td><td id="company"></td></tr>
+        <tr><td>Department</td><td id="dept"></td></tr>
+        <tr><td>Posisi</td><td id="job"></td></tr>
+        <tr><td>Check-In</td><td id="checkin"></td></tr>
+        <tr><td>Check-Out</td><td id="checkout"></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const logBox = document.getElementById("logBox");
+    const userInfo = document.getElementById("userInfo");
+
+    const dummyUsers = [
+      { nik: "001", nama: "Fakhri Dhiya", company: "Farm Kemitraan", department: "Produksi", job: "Supervisor" },
+      { nik: "002", nama: "Rina Ayu", company: "Feedmill", department: "QA", job: "Staff QA" },
+      { nik: "003", nama: "Bagas Saputra", company: "Trading", department: "Sales", job: "Sales Executive" },
+      { nik: "004", nama: "Siti Marlina", company: "Farm Komersial", department: "Pakan", job: "Logistic" },
+      { nik: "005", nama: "Yusuf Hamdan", company: "WBI", department: "QC", job: "Analis" },
+      { nik: "006", nama: "Dewi Lestari", company: "FFI", department: "Support", job: "HR Officer" },
+      { nik: "007", nama: "Agus Tono", company: "RPBCS", department: "Penelitian", job: "Researcher" },
+      { nik: "008", nama: "Citra Melati", company: "MUASS", department: "R&D", job: "Engineer" },
+      { nik: "009", nama: "Joko Prabowo", company: "Breeding Hatchery", department: "Maintenance", job: "Teknisi" },
+      { nik: "010", nama: "Linda Wulandari", company: "FA Maintenance", department: "Utility", job: "Operator" },
+    ];
+
+    function addLog(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      const li = document.createElement("li");
+      li.textContent = `[${timestamp}] ${message}`;
+      logBox.appendChild(li);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function refreshDevice() {
+      addLog("Melakukan pengecekan ulang fingerprint device...");
+    }
+
+    function clearLog() {
+      logBox.innerHTML = "";
+    }
+
+    function simulateScan() {
+      const user = dummyUsers[Math.floor(Math.random() * dummyUsers.length)];
+      const now = new Date();
+
+      document.getElementById("nik").textContent = user.nik;
+      document.getElementById("nama").textContent = user.nama;
+      document.getElementById("company").textContent = user.company;
+      document.getElementById("dept").textContent = user.department;
+      document.getElementById("job").textContent = user.job;
+      document.getElementById("checkin").textContent = now.toLocaleTimeString();
+      document.getElementById("checkout").textContent = now.toLocaleTimeString();
+
+      userInfo.style.display = "block";
+      addLog(`Fingerprint terdeteksi. Absensi oleh ${user.nama}`);
+
+      setTimeout(() => {
+        userInfo.style.display = "none";
+      }, 10000);
+    }
+  </script>
+</body>
+</html>
